@@ -5,6 +5,8 @@ const bodyParser = require("body-parser");
 const ejs = require("ejs");
 const mongoose = require("mongoose");
 const encrypt = require("mongoose-encryption");
+const bcrypt = require("bcrypt");
+const saltRounds = 10;
 
 const app = express();
 
@@ -39,19 +41,24 @@ app.get("/register", function(req, res){
 });
 
 app.post("/register", function(req, res){
-  const newUser = new User({
-    email: req.body.username,
-    password: req.body.password
+
+  bcrypt.hash(req.body.password, saltRounds, function(err, hash) {
+    const newUser = new User({
+      email: req.body.username,
+      password: hash
+    });
+
+    newUser.save(function(err){
+      if(err) {
+        console.log(err);
+      } else {
+        // render the secrets page upon successful creation of a new user
+        res.render("secrets");
+      }
+    });
   });
 
-  newUser.save(function(err){
-    if(err) {
-      console.log(err);
-    } else {
-      // render the secrets page upon successful creation of a new user
-      res.render("secrets");
-    }
-  });
+
 });
 
 app.post("/login", function(req, res){
